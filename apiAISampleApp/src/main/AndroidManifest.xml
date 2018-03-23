@@ -8,6 +8,8 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BROADCAST_STICKY" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="android.permission.ACTION_MANAGE_OVERLAY_PERMISSION"></uses-permission>
 
     <application
         android:name=".AIApplication"
@@ -86,6 +88,8 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/ai_app_widget_info" />
         </receiver>
+
+        <service android:name=".OverlayShowingService"></service>
 
     </application>
 

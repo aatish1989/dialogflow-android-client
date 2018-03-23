@@ -57,7 +57,7 @@ public class AIDialogSampleActivity extends BaseActivity implements AIDialog.AID
 
         final AIConfiguration config = new AIConfiguration(Config.ACCESS_TOKEN,
                 AIConfiguration.SupportedLanguages.English,
-                AIConfiguration.RecognitionEngine.System);
+                AIConfiguration.RecognitionEngine.Google);
 
         aiDialog = new AIDialog(this, config);
         aiDialog.setResultsListener(this);

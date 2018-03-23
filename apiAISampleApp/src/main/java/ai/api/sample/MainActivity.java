@@ -77,6 +77,15 @@ public class MainActivity extends BaseActivity {
         startActivity(AITextSampleActivity.class);
     }
 
+    public void openHikeAss(final View view) {
+        startService(OverlayShowingService.class);
+    }
+
+    private void startService(Class<?> cls) {
+        final Intent intent = new Intent(this, cls);
+        startService(intent);
+    }
+
     private void startActivity(Class<?> cls) {
         final Intent intent = new Intent(this, cls);
         startActivity(intent);

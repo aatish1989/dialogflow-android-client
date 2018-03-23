@@ -18,10 +18,14 @@ package ai.api.ui;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.graphics.PixelFormat;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
+import android.view.Gravity;
+import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.TextView;
 
 import java.util.List;
@@ -43,11 +47,14 @@ public class AIDialog {
     private final AIConfiguration config;
 
     private AIDialogListener resultsListener;
-    private final Dialog dialog;
+    /*private final Dialog dialog;*/
     private final AIButton aiButton;
     private final TextView partialResultsTextView;
 
     private final Handler handler;
+    private WindowManager wm;
+    private View customView;
+    private WindowManager.LayoutParams params;
 
     public interface AIDialogListener {
         void onResult(final AIResponse result);
@@ -62,16 +69,25 @@ public class AIDialog {
     public AIDialog(final Context context, final AIConfiguration config, final int customLayout) {
         this.context = context;
         this.config = config;
-        dialog = new Dialog(context);
+        /*dialog = new Dialog(context);*/
         handler = new Handler(Looper.getMainLooper());
 
-        dialog.setCanceledOnTouchOutside(true);
+        /*dialog.setCanceledOnTouchOutside(true);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(customLayout);
+        dialog.setContentView(customLayout);*/
 
-        partialResultsTextView = (TextView) dialog.findViewById(R.id.partialResultsTextView);
+        customView = View.inflate(context, R.layout.aidialog, null);
+        wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        params = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL, PixelFormat.TRANSLUCENT);
+        params.gravity = Gravity.CENTER;
+        params.x = 0;
+        params.y = 0;
+        params.width = WindowManager.LayoutParams.WRAP_CONTENT;
+        params.height = WindowManager.LayoutParams.WRAP_CONTENT;
 
-        aiButton = (AIButton) dialog.findViewById(R.id.micButton);
+        partialResultsTextView = (TextView) customView.findViewById(R.id.partialResultsTextView);
+
+        aiButton = (AIButton) customView.findViewById(R.id.micButton);
         aiButton.initialize(config);
         setAIButtonCallback(aiButton);
     }
@@ -81,7 +97,7 @@ public class AIDialog {
     }
 
     public Dialog getDialog() {
-        return dialog;
+        return /*dialog*/null;
     }
 
     public void showAndListen() {
@@ -89,7 +105,8 @@ public class AIDialog {
             @Override
             public void run() {
                 resetControls();
-                dialog.show();
+               /* dialog.show();*/
+                wm.addView(customView, params);
                 startListening();
             }
         });
@@ -168,7 +185,8 @@ public class AIDialog {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                dialog.dismiss();
+                wm.removeViewImmediate(customView);
+                /*dialog.dismiss();*/
             }
         });
     }
