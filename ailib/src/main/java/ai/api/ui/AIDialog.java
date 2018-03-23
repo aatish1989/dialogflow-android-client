@@ -21,11 +21,14 @@ import android.content.Context;
 import android.graphics.PixelFormat;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Layout;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.List;
@@ -69,12 +72,8 @@ public class AIDialog {
     public AIDialog(final Context context, final AIConfiguration config, final int customLayout) {
         this.context = context;
         this.config = config;
-        /*dialog = new Dialog(context);*/
-        handler = new Handler(Looper.getMainLooper());
 
-        /*dialog.setCanceledOnTouchOutside(true);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(customLayout);*/
+        handler = new Handler(Looper.getMainLooper());
 
         customView = View.inflate(context, R.layout.aidialog, null);
         wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
@@ -86,6 +85,7 @@ public class AIDialog {
         params.height = WindowManager.LayoutParams.WRAP_CONTENT;
 
         partialResultsTextView = (TextView) customView.findViewById(R.id.partialResultsTextView);
+
 
         aiButton = (AIButton) customView.findViewById(R.id.micButton);
         aiButton.initialize(config);
@@ -104,9 +104,8 @@ public class AIDialog {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                resetControls();
-               /* dialog.show();*/
                 wm.addView(customView, params);
+                ifViewAdded = true;
                 startListening();
             }
         });
@@ -120,11 +119,6 @@ public class AIDialog {
         return textRequest(new AIRequest(request));
     }
 
-    private void resetControls() {
-        if (partialResultsTextView != null) {
-            partialResultsTextView.setText("");
-        }
-    }
 
     private void setAIButtonCallback(final AIButton aiButton) {
         aiButton.setResultsListener(new AIButton.AIButtonListener() {
@@ -166,6 +160,8 @@ public class AIDialog {
                         public void run() {
                             if (partialResultsTextView != null) {
                                 partialResultsTextView.setText(result);
+                                ViewGroup.LayoutParams params = customView.getLayoutParams();
+                                wm.updateViewLayout(customView, params);
                             }
                         }
                     });
@@ -181,12 +177,16 @@ public class AIDialog {
         }
     }
 
+    boolean ifViewAdded;
+
     public void close() {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                wm.removeViewImmediate(customView);
-                /*dialog.dismiss();*/
+                if(ifViewAdded) {
+                    wm.removeViewImmediate(customView);
+                    ifViewAdded = false;
+                }
             }
         });
     }
@@ -221,5 +221,10 @@ public class AIDialog {
         if (aiButton != null) {
             aiButton.resume();
         }
+    }
+
+    public Handler getHandler()
+    {
+        return handler;
     }
 }

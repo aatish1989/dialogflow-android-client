@@ -1,15 +1,24 @@
 package ai.api.sample;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.text.TextUtils;
 import android.util.Log;
+import android.widget.TextView;
 
 import com.google.gson.Gson;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import ai.api.android.AIConfiguration;
 import ai.api.android.GsonFactory;
 import ai.api.model.AIError;
 import ai.api.model.AIResponse;
 import ai.api.ui.AIDialog;
+
+import static android.media.CamcorderProfile.get;
 
 /**
  * Created by aatishmittal on 23/03/18.
@@ -19,22 +28,76 @@ public class AIDialogueUtils {
     private static final String TAG = "AIDialogueUtils";
     private static Gson gson = GsonFactory.getGson();
 
-    public static void openVoiceInputDialog(Context context)
+    public static void openVoiceInputDialog(final Context context)
     {
         final AIConfiguration config = new AIConfiguration(Config.ACCESS_TOKEN,
                 AIConfiguration.SupportedLanguages.English,
                 AIConfiguration.RecognitionEngine.Google);
 
-        AIDialog aiDialog = new AIDialog(context.getApplicationContext(), config);
+        final AIDialog aiDialog = new AIDialog(context.getApplicationContext(), config);
         aiDialog.setResultsListener(new AIDialog.AIDialogListener() {
             @Override
-            public void onResult(AIResponse result) {
-                Log.d(TAG, "onResult "+gson.toJson(result));
+            public void onResult(final AIResponse result) {
+                aiDialog.getHandler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            JSONObject json = new JSONObject(gson.toJson(result));
+                            JSONArray messages = json.getJSONObject("result").getJSONObject("fulfillment").getJSONArray("messages");
+
+                            if(messages.length() > 1)
+                            {
+                                JSONObject payload = ((JSONObject)messages.get(1)).optJSONObject("payload");
+                                if(payload != null)
+                                {
+                                    String response = payload.optString("response");
+                                    if(!TextUtils.isEmpty(response))
+                                    {
+                                        TTS.speak(response);
+                                    }
+
+                                    String deeplink = payload.optString("deeplink");
+                                    if(!TextUtils.isEmpty(deeplink)) {
+                                        Intent intent = new Intent();
+                                        intent.setData(Uri.parse(deeplink));
+                                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                        context.startActivity(intent);
+                                        return;
+                                    }
+                                }
+                            }
+
+                            //Small Talk
+                            JSONObject fulfillment = json.getJSONObject("result").optJSONObject("fulfillment");
+                            if(fulfillment != null && !TextUtils.isEmpty(fulfillment.optString("speech")))
+                            {
+                                String fulfillmentText = fulfillment.optString("speech");
+                                TTS.speak(fulfillmentText);
+                                return;
+                            }
+
+
+                        }catch (Exception e)
+                        {
+                            e.printStackTrace();
+                        }
+
+                        onError(new AIError("No match Found"));
+                    }
+                });
+
             }
 
             @Override
             public void onError(AIError error) {
                 Log.d(TAG, "onError "+error.getMessage());
+                aiDialog.getHandler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        TTS.speak("Sorry, Could not process");
+                        aiDialog.close();
+                    }
+                });
             }
 
             @Override
