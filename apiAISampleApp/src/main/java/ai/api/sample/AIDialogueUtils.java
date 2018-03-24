@@ -80,6 +80,23 @@ public class AIDialogueUtils {
                                             }
 
                                             deeplink = builder.build().toString();
+                                        }else if(deeplink.contains("discover"))
+                                        {
+                                            if(!TextUtils.isEmpty(payload.optString("tags")))
+                                            {
+                                                Uri uri = Uri.parse(deeplink);
+                                                Uri.Builder builder = uri.buildUpon();
+                                                builder.appendQueryParameter("tags", payload.optString("tags"));
+                                                deeplink = builder.build().toString();
+                                            }else if(!TextUtils.isEmpty(payload.optString("any"))){
+                                                Uri uri = Uri.parse("hike://universalsearch/open");
+                                                Uri.Builder builder = uri.buildUpon();
+                                                JSONObject jsonObject = new JSONObject();
+                                                jsonObject.put("query", payload.optString("any"));
+                                                builder.appendQueryParameter("data",jsonObject.toString());
+                                                deeplink = builder.build().toString();
+                                            }
+
                                         }
 
                                         Intent intent = new Intent();
