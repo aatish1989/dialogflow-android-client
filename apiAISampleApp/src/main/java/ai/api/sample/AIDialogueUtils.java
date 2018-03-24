@@ -57,7 +57,24 @@ public class AIDialogueUtils {
                                     }
 
                                     String deeplink = payload.optString("deeplink");
+
                                     if(!TextUtils.isEmpty(deeplink)) {
+                                        //chat hack
+                                        if(deeplink.contains("composechat"))
+                                        {
+                                            Uri uri = Uri.parse(deeplink);
+                                            Uri.Builder builder = uri.buildUpon();
+
+                                            if(!TextUtils.isEmpty(payload.optString("user")))
+                                            {
+                                                builder.appendQueryParameter("user", payload.optString("user"));
+                                            }else if(!TextUtils.isEmpty(payload.optString("user1"))){
+                                                builder.appendQueryParameter("user", payload.optString("user1"));
+                                            }
+
+                                            deeplink = builder.build().toString();
+                                        }
+
                                         Intent intent = new Intent();
                                         intent.setData(Uri.parse(deeplink));
                                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
