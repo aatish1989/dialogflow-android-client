@@ -28,6 +28,12 @@ public class AIDialogueUtils {
     private static final String TAG = "AIDialogueUtils";
     private static Gson gson = GsonFactory.getGson();
 
+
+    private static void startService(Class<?> cls, Context context, String action) {
+        final Intent intent = new Intent(context, cls);
+        intent.putExtra(OverlayShowingService.Extras.ACTION, action);
+        context.startService(intent);
+    }
     public static void openVoiceInputDialog(final Context context)
     {
         final AIConfiguration config = new AIConfiguration(Config.ACCESS_TOKEN,
@@ -41,6 +47,7 @@ public class AIDialogueUtils {
                 aiDialog.getHandler().post(new Runnable() {
                     @Override
                     public void run() {
+                startService(OverlayShowingService.class, context, "processed");
                         try {
                             JSONObject json = new JSONObject(gson.toJson(result));
                             JSONArray messages = json.getJSONObject("result").getJSONObject("fulfillment").getJSONArray("messages");
@@ -120,6 +127,13 @@ public class AIDialogueUtils {
             @Override
             public void onCancelled() {
                 Log.d(TAG, "onCancelled");
+                aiDialog.getHandler().post(new Runnable() {
+                    @Override
+                    public void run() {
+                        TTS.speak("Cancelling");
+                        aiDialog.close();
+                    }
+                });
             }
         });
 

@@ -15,7 +15,6 @@
         android:layout_height="wrap_content"
         android:background="@drawable/rounder_corner_bg"
         android:padding="5dp"
-        android:layout_marginTop="-15dp"
         android:layout_gravity="center"
         android:text="TAP ME"
         android:textColor="@android:color/white"

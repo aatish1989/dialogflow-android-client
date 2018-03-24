@@ -1,5 +1,7 @@
 package ai.api.sample;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.app.Service;
 import android.content.Context;
@@ -13,6 +15,7 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
+import android.widget.TextView;
 
 import java.io.IOException;
 
@@ -29,6 +32,8 @@ public class OverlayShowingService extends Service implements OnTouchListener {
     private WindowManager wm;
     private GestureDetector gestureDetector;
     private View customView;
+    private TextView speechTV;
+    private GifImageView gifImageView;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -43,20 +48,11 @@ public class OverlayShowingService extends Service implements OnTouchListener {
 
         customView = View.inflate(this, R.layout.hike_ai, null);
 
-        GifImageView gifImageView = (GifImageView) customView.findViewById(R.id.gif);
+        speechTV = (TextView) customView.findViewById(R.id.speech_bubble);
+
+        gifImageView = (GifImageView) customView.findViewById(R.id.gif);
         customView.setOnTouchListener(this);
-        try {
-            final GifDrawable gifDrawable = new GifDrawable(getAssets(), "hello.gif");
-            gifImageView.setBackground(gifDrawable);
-            gifImageView.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    gifDrawable.stop();
-                }
-            }, 5000);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        showCharacterAnimation("thumbs_up.gif");
 
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL, PixelFormat.TRANSLUCENT);
         params.gravity = Gravity.LEFT | Gravity.TOP;
@@ -70,6 +66,21 @@ public class OverlayShowingService extends Service implements OnTouchListener {
         gestureDetector = new GestureDetector(this, new MyGestureListener());
 
 
+    }
+
+    private void showCharacterAnimation(String assetName) {
+        try {
+            final GifDrawable gifDrawable = new GifDrawable(getAssets(), assetName);
+            gifImageView.setBackground(gifDrawable);
+            gifImageView.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    gifDrawable.stop();
+                }
+            }, 2000);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -124,6 +135,9 @@ public class OverlayShowingService extends Service implements OnTouchListener {
             params.x = newX - (topLeftLocationOnScreen[0]);
             params.y = newY - (topLeftLocationOnScreen[1]);
 
+            speechTV.setText("TAP HERE");
+
+
             wm.updateViewLayout(customView, params);
             moving = true;
         } else if (event.getAction() == MotionEvent.ACTION_UP) {
@@ -137,6 +151,21 @@ public class OverlayShowingService extends Service implements OnTouchListener {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        String action = intent.getStringExtra(OverlayShowingService.Extras.ACTION);
+
+        if(action != null) {
+            if (action.equals("close")) {
+                showCharacterAnimation("dont_close.gif");
+                stopSelf();
+            } else if (action.equals("not_found")) {
+                showCharacterAnimation("hit_head.gif");
+            } else if (action.equals("processed")) {
+                showCharacterAnimation("thumbs_up.gif");
+            } else if (action.equals("start")) {
+                showCharacterAnimation("searching.gif");
+            }
+        }
+
         return START_NOT_STICKY;
     }
 
@@ -156,6 +185,15 @@ public class OverlayShowingService extends Service implements OnTouchListener {
                 wm.updateViewLayout(floatingUnitLayout, myParams);
             }
         });
+
+        animator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                speechTV.setText("Welcome Hiker! start speaking !");
+                showCharacterAnimation("searching.gif");
+            }
+        });
         animator.start();
     }
 
@@ -169,4 +207,7 @@ public class OverlayShowingService extends Service implements OnTouchListener {
         }
     }
 
+    public class Extras {
+        public static final String ACTION = "action" ;
+    }
 }
