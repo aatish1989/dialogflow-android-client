@@ -120,6 +120,7 @@ public class AIDialogueUtils {
                     public void run() {
                         TTS.speak("Sorry, Could not process");
                         aiDialog.close();
+                        startService(OverlayShowingService.class, context, "not_found");
                     }
                 });
             }
@@ -132,6 +133,7 @@ public class AIDialogueUtils {
                     public void run() {
                         TTS.speak("Cancelling");
                         aiDialog.close();
+                        startService(OverlayShowingService.class, context, "not_found");
                     }
                 });
             }
