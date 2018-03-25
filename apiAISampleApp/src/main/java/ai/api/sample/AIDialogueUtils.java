@@ -12,6 +12,8 @@ import com.google.gson.Gson;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.net.URLEncoder;
+
 import ai.api.android.AIConfiguration;
 import ai.api.android.GsonFactory;
 import ai.api.model.AIError;
@@ -113,7 +115,19 @@ public class AIDialogueUtils {
                             if(fulfillment != null && !TextUtils.isEmpty(fulfillment.optString("speech")))
                             {
                                 String fulfillmentText = fulfillment.optString("speech");
-                                TTS.speak(fulfillmentText);
+
+                                if(json.getJSONObject("result").getString("action").contains("smalltalk"))
+                                {
+                                    TTS.speak(fulfillmentText);
+                                } else {
+                                    String escapedQuery = URLEncoder.encode(json.getJSONObject("result").getString("resolvedQuery"), "UTF-8");
+                                    Uri uri = Uri.parse("http://www.google.com/#q=" + escapedQuery);
+                                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                                    context.startActivity(intent);
+                                    TTS.speak("I think google can answer this better.");
+                                    return;
+                                }
+
                                 return;
                             }
 
