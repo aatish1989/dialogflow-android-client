@@ -116,7 +116,7 @@ public class AIDialogueUtils {
                             {
                                 String fulfillmentText = fulfillment.optString("speech");
 
-                                if(json.getJSONObject("result").getString("action").contains("smalltalk"))
+                                if(json.getJSONObject("result").getString("action").contains("smalltalk") || json.getJSONObject("result").getString("action").contains("show-available-features"))
                                 {
                                     TTS.speak(fulfillmentText);
                                 } else {
